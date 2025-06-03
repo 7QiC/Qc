@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700">
+    <style>
+        .class-box { fill: white; stroke: #333; stroke-width: 2; rx: 8; ry: 8; }
+        .title { font: bold 18px Arial; fill: #333; }
+        .member { font: 14px Arial; fill: #666; }
+        .relation { stroke: #333; stroke-width: 2; fill: none; }
+        .inherit { stroke: #333; stroke-width: 2; }
+        .compose { marker-end: url(#compose-marker); }
+        .dependency { stroke-dasharray: 4 4; }
+        marker#compose-marker { fill: #333; markerWidth: 12; markerHeight: 12; }
+    </style>
+
+    <!-- Logger类 -->
+    <rect x="80" y="50" width="220" height="220" class="class-box" />
+    <text x="190" y="75" class="title">Logger</text>
+    <text x="100" y="110" class="member">- name: String</text>
+    <text x="100" y="135" class="member">- level: Level</text>
+    <text x="100" y="160" class="member">+ debug(message: String): void</text>
+    <text x="100" y="185" class="member">+ info(message: String): void</text>
+    <text x="100" y="210" class="member">+ warn(message: String): void</text>
+    <text x="100" y="235" class="member">+ error(message: String): void</text>
+
+    <!-- Level类 -->
+    <rect x="380" y="50" width="180" height="160" class="class-box" />
+    <text x="470" y="75" class="title">Level</text>
+    <text x="400" y="110" class="member">+ DEBUG: Level</text>
+    <text x="400" y="135" class="member">+ INFO: Level</text>
+    <text x="400" y="160" class="member">+ WARN: Level</text>
+    <text x="400" y="185" class="member">+ ERROR: Level</text>
+
+    <!-- Appender接口 -->
+    <rect x="700" y="50" width="220" height="160" class="class-box" />
+    <text x="810" y="75" class="title">Appender</text>
+    <text x="720" y="110" class="member">+ append(event: LogEvent): void</text>
+    <text x="720" y="135" class="member">+ setLayout(layout: Layout): void</text>
+    <text x="720" y="160" class="member">+ setFilter(filter: Filter): void</text>
+
+    <!-- Layout接口 -->
+    <rect x="700" y="250" width="220" height="120" class="class-box" />
+    <text x="810" y="275" class="title">Layout</text>
+    <text x="720" y="310" class="member">+ format(event: LogEvent): String</text>
+
+    <!-- Filter接口 -->
+    <rect x="700" y="420" width="220" height="120" class="class-box" />
+    <text x="810" y="445" class="title">Filter</text>
+    <text x="720" y="480" class="member">+ decide(event: LogEvent): FilterResult</text>
+
+    <!-- LogEvent类 -->
+    <rect x="80" y="350" width="220" height="220" class="class-box" />
+    <text x="190" y="375" class="title">LogEvent</text>
+    <text x="100" y="410" class="member">- loggerName: String</text>
+    <text x="100" y="435" class="member">- level: Level</text>
+    <text x="100" y="460" class="member">- message: String</text>
+    <text x="100" y="485" class="member">- timestamp: Date</text>
+    <text x="100" y="510" class="member">- throwable: Throwable</text>
+
+    <!-- ConsoleAppender实现类 -->
+    <rect x="450" y="250" width="200" height="220" class="class-box" />
+    <text x="550" y="275" class="title">ConsoleAppender</text>
+    <text x="470" y="310" class="member">- target: String</text>
+    <text x="470" y="335" class="member">- layout: Layout</text>
+    <text x="470" y="370" class="member">+ append(event: LogEvent): void</text>
+    <text x="470" y="395" class="member">+ close(): void</text>
+
+    <!-- 关系连线 -->
+    <!-- 组合关系 -->
+    <line x1="220" y1="135" x2="380" y2="135" class="relation compose" />
+    <text x="300" y="120" class="member">1</text>
+    
+    <line x1="220" y1="235" x2="450" y2="335" class="relation compose" />
+    <text x="330" y="280" class="member">1..*</text>
+    
+    <line x1="220" y1="375" x2="190" y2="350" class="relation compose" />
+    <text x="205" y="360" class="member">1</text>
+
+    <!-- 继承关系 -->
+    <path d="M700 160 Q 550 160 550 250" class="inherit" />
+    <polygon points="550,240 565,255 535,255" fill="#333" />
+
+    <!-- 依赖关系 -->
+    <path d="M450 335 Q 600 335 600 275" class="relation dependency" />
+    <polygon points="590,275 605,260 605,290" fill="white" stroke="#333" stroke-width="2" />
+    
+    <path d="M450 395 Q 600 395 600 445" class="relation dependency" />
+    <polygon points="590,445 605,430 605,460" fill="white" stroke="#333" stroke-width="2" />
+</svg>

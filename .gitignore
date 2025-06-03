@@ -1,0 +1,18 @@
+# 编译产物
+build/
+*.o
+*.a
+*.so
+*.exe
+
+# 日志文件
+*.log
+
+# IDE/编辑器配置
+.vscode/
+.idea/
+*.swp
+
+# lib/bin
+lib/
+bin/
