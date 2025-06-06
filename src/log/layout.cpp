@@ -2,7 +2,8 @@
 
 using namespace qc::log;
 
-Layout::Layout(const std::string& pattern) : m_pattern(pattern) {
+Layout::Layout(const std::string& pattern) 
+                : m_pattern(pattern) {
     init();
 }
 
@@ -16,7 +17,8 @@ std::string Layout::layout(Event::ptr event) {
 
 class TextFormatItem : public Layout::FormatItem {
   public:
-    explicit TextFormatItem(const std::string& str) : m_str(str) {}
+    explicit TextFormatItem(const std::string& str) 
+                            : m_str(str) {}
 
     void format(std::ostream& os, Event::ptr event) override {
         os << m_str;
@@ -79,7 +81,8 @@ class LineFormatItem : public Layout::FormatItem {
 
 class DateTimeFormatItem : public Layout::FormatItem {
   public:
-    explicit DateTimeFormatItem(const std::string& time) : m_time(time) {
+    explicit DateTimeFormatItem(const std::string& time) 
+                                : m_time(time) {
         if (m_time.empty()) {
             m_time = "%Y-%m-%d %H:%M:%S";
         }

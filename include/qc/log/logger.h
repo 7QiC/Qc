@@ -1,10 +1,11 @@
-#ifndef QC_LOG_LOGGER_H
-#define QC_LOG_LOGGER_H
+#ifndef QC_LOGGER_H
+#define QC_LOGGER_H
 
 #include <list>
 #include <source_location>
 #include "qc/log/appender.h"
 #include "qc/utils.h"
+#include "qc/thread/mutex.h"
 
 namespace qc {
 namespace log {
@@ -12,10 +13,11 @@ namespace log {
 class Logger{
   public:
     using ptr = std::shared_ptr<Logger>;
+    using RWMutex = qc::thread::RWMutex;
 
     Logger(const std::string& name);
 
-    void log(Event::ptr event);
+    bool log(Event::ptr event);
 
     /**
      * @brief 格式化输出日志
@@ -32,14 +34,15 @@ class Logger{
     void clearAppenders();
 
     const std::string& getName() const { return m_name; }
-    Level getLevel() const { return m_level; }
-    Layout::ptr getLayout() const { return m_layout; }
-    void setLevel(Level level) { m_level = level; }
-    void setPattern(const std::string& pattern) { m_pattern = pattern;}
-    void setLayout(Layout::ptr layout) {m_layout = layout;}
-    bool isValid() const { return m_valid; }
-    void setValid(bool valid) { m_valid = valid; }
+    Level getLevel() const;
+    Layout::ptr getLayout() const;
+    void setLevel(Level level);
+    void setPattern(const std::string& pattern);
+    void setLayout(Layout::ptr layout);
+    bool isValid() const;
+    void setValid(bool valid);
   private:
+    mutable RWMutex m_mutex;
     std::string m_name;                     // 日志器名称
     Level m_level;                          // 日志有效级别
     std::string m_pattern;                  // 日志格式

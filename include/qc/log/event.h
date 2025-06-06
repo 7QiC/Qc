@@ -1,10 +1,11 @@
-#ifndef QC_LOG_EVENT_H
-#define QC_LOG_EVENT_H
+#ifndef QC_EVENT_H
+#define QC_EVENT_H
 
 #include <string>
 #include <cstdint>
 #include <memory>
 #include <sstream>
+#include "qc/thread/mutex.h"
 
 namespace qc {
 namespace log {

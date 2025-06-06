@@ -20,6 +20,7 @@ void Manager::init() {
 }
 
 Logger::ptr Manager::getLogger(const std::string& name) {
+    RWMutex::WLock lock(m_mutex);
     auto it = m_loggers.find(name);
     if (it != m_loggers.end()) {
         return it->second;
@@ -31,6 +32,7 @@ Logger::ptr Manager::getLogger(const std::string& name) {
 }
 
 Layout::ptr Manager::getLayout(const std::string& pattern) {
+    RWMutex::WLock lock(m_mutex);
     auto it = m_layouts.find(pattern);
     if (it != m_layouts.end()) {
         return it->second;

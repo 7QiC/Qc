@@ -1,4 +1,4 @@
-#include "qc/log/log.h"
+#include "qc/log/log_module.h"
 #include "qc/utils.h"
 
 using namespace qc::log;
@@ -7,8 +7,7 @@ int main() {
     int x = 10;
     char c = 'A';
     // 创建日志器
-    Logger::ptr logger = std::make_shared<Logger>("test_logger");
-    LoggerMgr::Instance()->addLogger(logger);
+    Logger::ptr logger = LoggerMgr::Instance()->getLogger("test_logger");
     logger->setLayout(LoggerMgr::Instance()->getLayout());
     logger->setLevel(LoggerMgr::Instance()->getLevel());
     logger->setPattern(LoggerMgr::Instance()->getPattern());
@@ -38,8 +37,8 @@ int main() {
     LOG_FATAL(logger) << "This is a define fatal log message." << x << c;
 
     // 使用格式化宏记录日志
-    LOG_FMT_DEBUG(logger, "This is a formatted debug log message with value: %d %c", x, c);
-    LOG_FMT_INFO(logger, "This is a formatted info log message with value: %d %c", x, c);
+    LOG_FMT_DEBUG(logger, "This is a formatted debug log message with value: ");
+    LOG_FMT_INFO(logger, "This is a formatted info log message with value: ");
     LOG_FMT_WARN(logger, "This is a formatted warning log message with value: %d %c", x, c);
     LOG_FMT_ERROR(logger, "This is a formatted error log message with value: %d %c", x, c);
     LOG_FMT_FATAL(logger, "This is a formatted fatal log message with value: %d %c", x, c);

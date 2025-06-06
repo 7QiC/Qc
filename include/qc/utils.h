@@ -29,6 +29,36 @@ class SingletonPtr {
   private:
 };
 
+class NonCopy {
+  protected:
+    NonCopy() = default;
+    ~NonCopy() = default;
+    
+    NonCopy(const NonCopy&) = delete;
+    NonCopy& operator=(const NonCopy&) = delete;
+};
+
+class NonMove {
+  protected:
+    NonMove() = default;
+    ~NonMove() = default;
+
+    NonMove(NonMove&&) = delete;
+    NonMove& operator=(NonMove&&) = delete;
+};
+
+class NonTransfer {
+  protected:
+    NonTransfer() = default;
+    ~NonTransfer() = default;
+
+    NonTransfer(const NonTransfer&) = delete;
+    NonTransfer& operator=(const NonTransfer&) = delete;
+
+    NonTransfer(NonTransfer&&) = delete;
+    NonTransfer& operator=(NonTransfer&&) = delete;
+};
+
 pid_t GetThreadId();
 
 uint32_t GetFiberId();

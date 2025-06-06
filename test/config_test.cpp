@@ -1,6 +1,6 @@
-#include "qc/config/config.h"
-#include "qc/log/log.h"
-#include "qc/config/log_config.h"
+#include <fstream>
+#include "qc/log/log_module.h"
+#include "qc/config/config_module.h"
 
 // class Person {
 //   public:
@@ -51,13 +51,24 @@ using namespace qc;
 
 
 void test_log_config() {
+    // LOG_INFO(GET_LOGGER("system")) << "This is a test log message for system";
     // LOG_INFO(ROOT_LOG()) << "Before:" << g_log_config->getValue().size();
-    LOG_INFO(GET_LOGGER("root1")) << "This is a test log message for root1 before config load";
+    // LOG_INFO(GET_LOGGER("root1")) << "This is a test log message for root1 before config load";
     YAML::Node root = YAML::LoadFile("./conf/log.yml");
     Config::LoadFromYaml(root);
-    LOG_INFO(GET_LOGGER("root1")) << "This is a test log message for root1 after config load";
+    LOG_INFO(ROOT_LOG()) << "xxx";
+    // LOG_INFO(GET_LOGGER("root1")) << "This is a test log message for root1 after config load";
+    // LOG_INFO(GET_LOGGER("system")) << "This is a test log message for system after config load";
     // LOG_INFO(ROOT_LOG()) << "After:" << g_log_config->getValue().size();
     // LOG_INFO(ROOT_LOG()) << g_log_config->toString();
+    // Config::Visit([](ConfigVarBase::ptr var) {
+    //     LOG_INFO(ROOT_LOG()) << "name:" << var->getName() << " description:" << var->getDescription()
+    //               << " value:" << var->toString();
+    // });
+    YAML::Node node = Config::GetConfig();
+    std::ofstream fout("output.yml");
+    fout << node;
+    fout.close();
 }
 // ConfigVar<Person>::ptr g_person = 
 //     Config::Create("class.person", Person{"John Doe", 30, true}, "this is a system person config");

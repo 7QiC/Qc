@@ -4,15 +4,19 @@ namespace qc {
 
 ConfigVar<std::unordered_map<std::string, LogConfig>>::ptr g_log_config = 
     Config::Create("logs", std::unordered_map<std::string, LogConfig>{
-        {"root1", LogConfig{
-            qc::log::Level::DEBUG, // 设置日志级别
-            "%d{%Y-%m-%d %H:%M:%S} %p %c - %m%n", // 设置日志模式
-            std::list<AppenderConfig>{{0, qc::log::Level::INFO, "%p %c - %m%n"}} // 设置 appenders
-        }}
+        // {"root1", LogConfig{
+        //     qc::log::Level::INFO, // 设置日志级别
+        //     "%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n", // 设置日志模式
+        //     std::list<AppenderConfig>{{"ConsoleAppender", qc::log::Level::INFO, "%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"},
+        //                                 {"FileAppender", qc::log::Level::INFO, "%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n", "./system.log"}} // 设置 appenders
+        // }}
     }, "this is a log config");
 
+// ConfigVar<std::unordered_map<std::string, LogConfig>>::ptr g_asd = qc::Config::Create("asd", std::unordered_map<std::string, LogConfig>{}, "log config");
+
 void setupLogger(const std::string& name, const LogConfig& config) {
-    qc::log::Logger::ptr logger = std::make_shared<qc::log::Logger>(name);
+    qc::log::Logger::ptr logger = LOG_MGR()->getLogger(name);
+    logger->setValid(false);
     if (config.level != qc::log::Level::UNKNOW) {
         logger->setLevel(config.level);
     } else {
@@ -26,12 +30,12 @@ void setupLogger(const std::string& name, const LogConfig& config) {
         logger->setPattern(LOG_MGR()->getPattern());
         logger->setLayout(LOG_MGR()->getLayout());
     }
-
+    
     logger->clearAppenders();
     if (!config.appenders.empty()) {
         for (const auto& appender_config : config.appenders) {
             qc::log::Appender::ptr appender;
-            if (appender_config.type == 0) {
+            if (appender_config.type == "ConsoleAppender") {
                 appender = std::make_unique<qc::log::ConsoleAppender>(logger->getLevel());
                 if (appender_config.level != qc::log::Level::UNKNOW) {
                     appender->setLevel(appender_config.level);
@@ -41,7 +45,7 @@ void setupLogger(const std::string& name, const LogConfig& config) {
                 } else {
                     appender->setLayout(LOG_MGR()->getLayout(appender_config.pattern));
                 }
-            } else if (appender_config.type == 1) {
+            } else if (appender_config.type == "FileAppender") {
                 const std::string& filename = appender_config.filename;
                 std::filesystem::path file_path(filename);
                 // 确保父目录存在（递归创建）
@@ -83,19 +87,19 @@ void setupLogger(const std::string& name, const LogConfig& config) {
         }
     }
     logger->setValid(true);
-    LOG_MGR()->addLogger(logger);
 }
 
 LogIniter::LogIniter() {
-    for (const auto& [name, config] : g_log_config->getValue()) {
-        if (name == "root") {
-            continue;
-        }
-        setupLogger(name, config);
-        LOG_INFO(ROOT_LOG()) << "Logger created: " << name;
-    }
-    g_log_config->setListener([](const std::unordered_map<std::string, LogConfig>& old_val, const std::unordered_map<std::string, LogConfig>& new_val) {
-        LOG_INFO(ROOT_LOG()) << "Log Config Changed.";
+    // for (const auto& [name, config] : g_log_config->getValue()) {
+    //     if (name == "root") {
+    //         continue;
+    //     }
+    //     setupLogger(name, config);
+    //     LOG_INFO(ROOT_LOG()) << "Logger created: " << name;
+    // }
+    g_log_config->setListener([](const std::unordered_map<std::string, LogConfig>& old_val,\
+                                 const std::unordered_map<std::string, LogConfig>& new_val) {
+        LOG_INFO(ROOT_LOG()) << "Log Config Loading";
         for (const auto& [name, config] : new_val) {
             if (name == "root") {
                 LOG_ERROR(ROOT_LOG()) << "Cannot modify root logger configuration.";
@@ -123,6 +127,7 @@ LogIniter::LogIniter() {
                 LOG_INFO(ROOT_LOG()) << "Logger invalid: " << name;
             }
         }
+        LOG_INFO(ROOT_LOG()) << "Log Config Loaded";
     });
 }
 

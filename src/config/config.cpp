@@ -21,7 +21,17 @@ void Config::TraversalYaml(const std::string& prefix, const YAML::Node& node, st
     }
 }
 
+const YAML::Node Config::GetConfig() {
+    RWMutex::RLock lock(Config::getMutex());
+    YAML::Node root;
+    Visit([&root](ConfigVarBase::ptr var) {
+        root[var->getName()] = var->toNode();
+    });
+    return root;
+}
+
 void Config::LoadFromYaml(const YAML::Node& root) {
+    RWMutex::WLock lock(Config::getMutex());
     std::list<std::pair<std::string, const YAML::Node>> nodes;
     TraversalYaml("", root, nodes);
 
@@ -33,8 +43,19 @@ void Config::LoadFromYaml(const YAML::Node& root) {
 
         ConfigVarBase::ptr var = LookupBase(key);
         if (var) {
+            if (it.second.IsNull()) {
+                continue;
+            }
             var->fromNode(it.second);
         }
+    }
+}
+
+void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb) {
+    RWMutex::RLock lock(Config::getMutex());
+    ConfigVarMap config = getVars();
+    for (const auto& it : config) {
+        cb(it.second);
     }
 }
 

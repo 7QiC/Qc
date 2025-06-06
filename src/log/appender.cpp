@@ -2,9 +2,8 @@
 
 using namespace qc::log;
 
-Appender::Appender(Level level) : m_level(level) {
-
-}
+Appender::Appender(Level level) 
+                    : m_level(level) {}
 
 void Appender::setLevel(Level level) {
     m_level = level;
@@ -18,17 +17,19 @@ Layout::ptr Appender::getLayout() const {
     return m_layout;
 }
 
-ConsoleAppender::ConsoleAppender(Level level) : Appender(level) {
-
-}
+ConsoleAppender::ConsoleAppender(Level level) 
+                    : Appender(level) {}
 
 void ConsoleAppender::log(Event::ptr event) {
     if (event->getLevel() >= m_level) {
-        std::cout << m_layout->layout(event);
+        std::string str = m_layout->layout(event);
+        Mutex::Lock lock(m_mutex);
+        std::cout << str;
     }
 }
 
-FileAppender::FileAppender(const std::string& filename, Level level) : m_filename(filename), Appender(level) {
+FileAppender::FileAppender(const std::string& filename, Level level) 
+                            : m_filename(filename), Appender(level) {
     if (!reopen()) {
         std::cerr << "FileAppender::reopen() error: " << filename << std::endl;
     }
@@ -44,6 +45,8 @@ bool FileAppender::reopen() {
 
 void FileAppender::log(Event::ptr event) {
     if (event->getLevel() >= m_level) {
-        m_filestream << m_layout->layout(event);
+        std::string str = m_layout->layout(event);
+        Mutex::Lock lock(m_mutex);
+        m_filestream << str;
     }
 }

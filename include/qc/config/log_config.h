@@ -4,12 +4,12 @@
 #include <filesystem>
 #include <fstream>
 #include "qc/config/config.h"
-#include "qc/log/log.h"
+#include "qc/log/log_module.h"
 
 namespace qc {
 
 struct AppenderConfig {
-    int type = 0; // 0: ConsoleAppender, 1: FileAppender, etc.
+    std::string type; // 0: ConsoleAppender, 1: FileAppender, etc.
     log::Level level = log::Level::UNKNOW;
     std::string pattern;
     std::string filename; // For FileAppender
@@ -48,8 +48,8 @@ struct convert<qc::AppenderConfig> {
         if (!node.IsMap() || !node["type"]) {
             return false;
         }
-        config.type = node["type"].as<int>();
-        if (config.type == 1 && !node["filename"]) {
+        config.type = node["type"].as<std::string>();
+        if (config.type == "FileAppender" && !node["filename"]) {
             return false;
         } 
         if (node["level"]) {

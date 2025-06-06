@@ -1,5 +1,5 @@
-#ifndef QC_LOG_WARP_H
-#define QC_LOG_WARP_H
+#ifndef QC_WARP_H
+#define QC_WARP_H
 
 #include <cstdarg>
 #include "qc/log/event.h"
@@ -14,8 +14,6 @@ class Warp {
     Warp(Logger::ptr logger, Event::ptr event);
 
     ~Warp();
-
-    Event::ptr getEvent() const { return m_event; }
 
     void format(const char* fmt, ...) {
         va_list al;

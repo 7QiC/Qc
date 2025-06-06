@@ -3,13 +3,18 @@
 using namespace qc::log;
 
 Logger::Logger(const std::string& name)
-             : m_name(name){
+                : m_name(name){
 }
 
-void Logger::log(Event::ptr event) {
+bool Logger::log(Event::ptr event) {
+    RWMutex::RLock lock(m_mutex);
+    if (!m_valid) {
+        return false;
+    }
     for (auto& appender : m_appenders) {
         appender->log(event);
     }
+    return true;
 }
 
 void Logger::debug(const char* fmt, std::source_location loc) {
@@ -83,6 +88,7 @@ void Logger::fatal(const char* fmt, std::source_location loc) {
 }
 
 void Logger::addAppender(Appender::ptr appender) {
+    RWMutex::WLock lock(m_mutex);
     if (!appender->getLayout()) {
         appender->setLayout(m_layout);
     }
@@ -90,9 +96,40 @@ void Logger::addAppender(Appender::ptr appender) {
 }
 
 void Logger::delAppender(Appender::ptr appender) {
+    RWMutex::WLock lock(m_mutex);
     m_appenders.remove(appender);
 }
 
 void Logger::clearAppenders() {
+    RWMutex::WLock lock(m_mutex);
     m_appenders.clear();
+}
+
+Level Logger::getLevel() const { 
+    RWMutex::RLock lock(m_mutex);
+    return m_level; 
+}
+Layout::ptr Logger::getLayout() const { 
+    RWMutex::RLock lock(m_mutex);
+    return m_layout; 
+}
+void Logger::setLevel(Level level) { 
+    RWMutex::WLock lock(m_mutex);
+    m_level = level; 
+}
+void Logger::setPattern(const std::string& pattern) { 
+    RWMutex::WLock lock(m_mutex);
+    m_pattern = pattern; 
+}
+void Logger::setLayout(Layout::ptr layout) { 
+    RWMutex::WLock lock(m_mutex);
+    m_layout = layout; 
+}
+bool Logger::isValid() const { 
+    RWMutex::RLock lock(m_mutex);
+    return m_valid; 
+}
+void Logger::setValid(bool valid) { 
+    RWMutex::WLock lock(m_mutex);
+    m_valid = valid; 
 }

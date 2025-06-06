@@ -1,5 +1,5 @@
-#ifndef QC_LOG_LAYOUT_H
-#define QC_LOG_LAYOUT_H
+#ifndef QC_LAYOUT_H
+#define QC_LAYOUT_H
 
 #include <iostream>
 #include <sstream>

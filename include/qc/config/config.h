@@ -12,7 +12,8 @@
 #include <unordered_map>
 #include <functional>
 #include <yaml-cpp/yaml.h>
-#include "qc/log/log.h"
+#include "qc/log/log_module.h"
+#include "qc/thread/mutex.h"
 
 namespace YAML {
 
@@ -154,6 +155,7 @@ class ConfigVarBase {
 
     virtual std::string toString() const = 0;
     virtual void fromString(const std::string& val) = 0;
+    virtual YAML::Node toNode() const = 0;
     virtual void fromNode(const YAML::Node& node) = 0;
     virtual std::string getTypeName() const = 0;
   protected:
@@ -166,11 +168,13 @@ class ConfigVar : public ConfigVarBase {
   public:
     using ptr = std::shared_ptr<ConfigVar>;
     using callback = std::function<void(const T& old_val, const T& new_val)>;
+    using RWMutex = qc::thread::RWMutex;
 
     ConfigVar(const std::string& name, const T& default_value, const std::string& description = "")
         : ConfigVarBase(name, description), m_value(default_value) {}
 
     std::string toString() const override {
+        RWMutex::RLock lock(m_mutex);
         try {
             YAML::Node node = YAML::convert<T>::encode(m_value);
             std::stringstream ss;
@@ -185,9 +189,10 @@ class ConfigVar : public ConfigVarBase {
     }
 
     void fromString(const std::string& val) override {
+        RWMutex::WLock lock(m_mutex);
         try {
             YAML::Node node = YAML::Load(val);
-            m_value = node.as<T>();
+            setValue(node.as<T>());
             return;
         } catch (std::exception& e) {
             LOG_ERROR(ROOT_LOG()) << "ConfigVar::fromString exception: " 
@@ -197,7 +202,20 @@ class ConfigVar : public ConfigVarBase {
         }
     }
 
+    YAML::Node toNode() const override {
+        RWMutex::RLock lock(m_mutex);
+        try {
+            return YAML::Node(m_value);
+        } catch (std::exception& e) {
+            LOG_ERROR(ROOT_LOG()) << "ConfigVar::toNode exception: " 
+                << e.what() << " convert: " << typeid(T).name() 
+                << " to string, name: " << m_name;
+        }
+        return YAML::Node();
+    }
+
     void fromNode(const YAML::Node& node) override {
+        RWMutex::WLock lock(m_mutex);
         try {
             setValue(node.as<T>());
             return;
@@ -209,8 +227,10 @@ class ConfigVar : public ConfigVarBase {
         }
     }
 
-    const T& getValue() const { return m_value; }
-    void setValue(const T& value) { 
+    const T& getValue() const { 
+        return m_value; 
+    }
+    void setValue(const T& value) {
         if (m_value == value) {
             return;
         }
@@ -223,17 +243,21 @@ class ConfigVar : public ConfigVarBase {
     std::string getTypeName() const override { return typeid(T).name(); }
 
     void setListener(const callback& cb) {
+        RWMutex::WLock lock(m_mutex);
         m_cb = cb;
     }
 
     void removeListener() {
+        RWMutex::WLock lock(m_mutex);
         m_cb = nullptr;
     }
 
     bool hasListener() const {
+        RWMutex::RLock lock(m_mutex);
         return m_cb != nullptr;
     }
   private:
+    mutable RWMutex m_mutex;
     T m_value;
     callback m_cb;
 };
@@ -241,6 +265,7 @@ class ConfigVar : public ConfigVarBase {
 class Config {
   public:
     using ConfigVarMap = std::unordered_map<std::string, ConfigVarBase::ptr>;
+    using RWMutex = qc::thread::RWMutex;
 
     template<class T>
     static typename ConfigVar<T>::ptr Create(const std::string& name,
@@ -254,7 +279,7 @@ class Config {
             LOG_ERROR(ROOT_LOG()) << "ConfigVar name contains invalid characters: " << name;
             return nullptr;
         }
-
+        
         auto it = getVars().find(name);
         if (it != getVars().end()) {
             auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
@@ -270,14 +295,21 @@ class Config {
                 return nullptr;
             }
         }
-
+        LOG_INFO(ROOT_LOG()) << "Create ConfigVar: " << name << ", description: " << description;
         auto var = std::make_shared<ConfigVar<T>>(name, default_value, description);
         getVars()[name] = var;
         return var;
     }
 
+    static const YAML::Node GetConfig();
     static void LoadFromYaml(const YAML::Node& root);
+    static void Visit(std::function<void(ConfigVarBase::ptr)> cb);
   private:
+    static RWMutex& getMutex() {
+        static RWMutex s_mutex;
+        return s_mutex;
+    }
+
     static ConfigVarMap& getVars() {
         static ConfigVarMap m_vars;
         return m_vars;

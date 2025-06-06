@@ -1,5 +1,5 @@
-#ifndef QC_LOG_APPENDER_H
-#define QC_LOG_APPENDER_H
+#ifndef QC_APPENDER_H
+#define QC_APPENDER_H
 
 #include <memory>
 #include <iostream>
@@ -15,6 +15,7 @@ namespace log {
 class Appender {
   public:
     using ptr = std::unique_ptr<Appender>;
+    using Mutex = qc::thread::SpinLock;
     
     explicit Appender(Level level);
     virtual ~Appender() = default;
@@ -26,6 +27,7 @@ class Appender {
     Layout::ptr getLayout() const;
     
   protected:
+    mutable Mutex m_mutex;
     Level m_level;           // 日志级别
     Layout::ptr m_layout;    // 日志格式化器
 };
