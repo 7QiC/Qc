@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <memory>
 #include <sstream>
-#include "qc/thread/mutex.h"
 
 namespace qc {
 namespace log {
@@ -29,6 +28,7 @@ class Event {
           uint32_t line,
           uint32_t elapse,
           uint32_t thread_id,
+          std::string thread_name,
           uint32_t fiber_id,
           time_t time,
           Level level,
@@ -38,7 +38,8 @@ class Event {
     Level getLevel() const { return m_level; }
     uint32_t getLine() const { return m_line; }
     uint32_t getThreadId() const { return m_threadId; }
-    uint32_t getFiberId() const { return m_fiberId; }
+    const std::string& getThreadName() const { return m_threadName; }
+    uint32_t getCoroutineId() const { return m_coroutineId; }
     uint32_t getElapse() const { return m_elapse; }
     time_t getTime() const { return m_time; }
     const std::string& getName() const { return m_name; }
@@ -53,7 +54,8 @@ class Event {
     Level m_level;            // 日志级别
     uint32_t m_line;          // 行号
     uint32_t m_threadId;      // 线程ID
-    uint32_t m_fiberId;       // 协程ID
+    std::string m_threadName; // 线程名称
+    uint32_t m_coroutineId;       // 协程ID
     uint32_t m_elapse;        // 程序启动至今毫秒数
     time_t m_time;            // 时间戳 
     std::string m_name;       // 日志器名称

@@ -1,9 +1,15 @@
 #include "qc/config/log_config.h"
+#include <filesystem>
+#include <fstream>
+#include <unordered_map>
+#include "qc/macro.h"
+#include "qc/log/event.h"
+#include "qc/log/appender.h"
+#include "qc/log/logger.h"
+#include "qc/log/manager.h"
 
-namespace qc {
-
-ConfigVar<std::unordered_map<std::string, LogConfig>>::ptr g_log_config = 
-    Config::Create("logs", std::unordered_map<std::string, LogConfig>{
+qc::ConfigVar<std::unordered_map<std::string, qc::LogConfig>>::ptr g_log_config = 
+    qc::Config::Create("logs", std::unordered_map<std::string, qc::LogConfig>{
         // {"root1", LogConfig{
         //     qc::log::Level::INFO, // 设置日志级别
         //     "%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n", // 设置日志模式
@@ -14,7 +20,9 @@ ConfigVar<std::unordered_map<std::string, LogConfig>>::ptr g_log_config =
 
 // ConfigVar<std::unordered_map<std::string, LogConfig>>::ptr g_asd = qc::Config::Create("asd", std::unordered_map<std::string, LogConfig>{}, "log config");
 
-void setupLogger(const std::string& name, const LogConfig& config) {
+qc::ConfigVar<int>::ptr g_coroutine_stack_size = qc::Config::Create("coroutine.stack_size", 128 * 1024, "coroutine stack size");
+
+void setupLogger(const std::string& name, const qc::LogConfig& config) {
     qc::log::Logger::ptr logger = LOG_MGR()->getLogger(name);
     logger->setValid(false);
     if (config.level != qc::log::Level::UNKNOW) {
@@ -89,7 +97,7 @@ void setupLogger(const std::string& name, const LogConfig& config) {
     logger->setValid(true);
 }
 
-LogIniter::LogIniter() {
+qc::Initer::Initer() {
     // for (const auto& [name, config] : g_log_config->getValue()) {
     //     if (name == "root") {
     //         continue;
@@ -131,6 +139,4 @@ LogIniter::LogIniter() {
     });
 }
 
-static LogIniter _log_init;
-
-}
+static qc::Initer _init;

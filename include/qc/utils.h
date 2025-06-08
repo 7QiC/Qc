@@ -1,33 +1,11 @@
 #ifndef QC_UTILS_H
 #define QC_UTILS_H
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/syscall.h>
 #include <cstdint>
-#include <memory>
+#include <string>
+#include <vector>
 
 namespace qc {
-
-template<class T, class X = void, int N = 0>
-class Singleton {
-  public:
-    static T* Instance() {
-        static T v;
-        return &v;
-    }
-  private:
-};
-
-template<class T, class X = void, int N = 0>
-class SingletonPtr {
-  public:
-    static std::shared_ptr<T> Instance() {
-        static std::shared_ptr<T> v(new T);
-        return v;
-    }
-  private:
-};
 
 class NonCopy {
   protected:
@@ -61,7 +39,13 @@ class NonTransfer {
 
 pid_t GetThreadId();
 
-uint32_t GetFiberId();
+const std::string& GetThreadName();
+
+uint32_t GetCoroutineId();
+
+void Backtrace(std::vector<std::string>& bt, int size, int skip);
+
+std::string BacktraceToString(int size, int skip, const std::string& prefix);
 
 }
 

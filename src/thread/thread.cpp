@@ -1,19 +1,19 @@
 #include "qc/thread/thread.h"
+#include <pthread.h>
+#include <memory>
 
-using namespace qc::thread;
+thread_local qc::thread::Thread* qc::thread::Thread::t_thread = nullptr;
+thread_local std::string qc::thread::Thread::t_threadName = "NONE";
 
-thread_local Thread* Thread::t_thread = nullptr;
-thread_local std::string Thread::t_threadName = "NONE";
-
-Thread* Thread::GetThis() {
+qc::thread::Thread* qc::thread::Thread::GetThis() {
     return t_thread;
 }
 
-std::string Thread::GetName() {
+const std::string& qc::thread::Thread::GetName() {
     return t_threadName;
 }
 
-void Thread::SetName(const std::string& name) {
+void qc::thread::Thread::SetName(const std::string& name) {
     if (name.empty()) {
         return;
     }
@@ -23,7 +23,7 @@ void Thread::SetName(const std::string& name) {
     t_threadName = name;
 }
 
-Thread::Thread(std::function<void()> cb, const std::string& name) 
+qc::thread::Thread::Thread(Func cb, const std::string& name) 
                 : m_cb(cb), m_name(name), m_state(State::INIT) {
     if (name.empty()) {
         m_name = "NONE";
@@ -36,7 +36,7 @@ Thread::Thread(std::function<void()> cb, const std::string& name)
     m_sem.wait();
 }
 
-Thread::~Thread() {
+qc::thread::Thread::~Thread() {
     switch (m_state) {
         case State::RUNNING: {
             int rt = pthread_detach(m_thread);
@@ -55,14 +55,13 @@ Thread::~Thread() {
     }
 }
 
-void* Thread::run(void* arg) {
-    Thread* selfptr = (Thread*)arg;
-    t_thread = selfptr;
+void* qc::thread::Thread::run(void* arg) {
+    t_thread = static_cast<Thread*>(arg);
     t_threadName = t_thread->m_name;
     t_thread->m_tid = qc::GetThreadId();
     pthread_setname_np(pthread_self(), t_threadName.substr(0, 15).c_str());
 
-    std::function<void()> cb;
+    Func cb;
     cb.swap(t_thread->m_cb);
     t_thread->m_sem.notify();
     try {
@@ -74,7 +73,7 @@ void* Thread::run(void* arg) {
     return nullptr;
 }
 
-void Thread::join() {
+void qc::thread::Thread::join() {
     if (m_state == State::JOINED) {
         return;
     }
@@ -88,7 +87,7 @@ void Thread::join() {
     m_state = State::JOINED;
 }
 
-void Thread::detach() {
+void qc::thread::Thread::detach() {
     if (m_state == State::DETACHED) {
         return;
     }

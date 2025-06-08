@@ -1,13 +1,8 @@
 #ifndef QC_LAYOUT_H
 #define QC_LAYOUT_H
 
-#include <iostream>
-#include <sstream>
 #include <memory>
 #include <vector>
-#include <map>
-#include <functional>
-#include <ctime>
 #include "qc/log/event.h"
 
 namespace qc {

@@ -1,0 +1,116 @@
+#include "qc/coroutine/coroutine.h"
+#include "qc/macro.h"
+
+thread_local ucontext_t* qc::coroutine::Coroutine::main_ctx = nullptr;
+thread_local qc::coroutine::Coroutine* qc::coroutine::Coroutine::cur_coro = nullptr;
+thread_local uint64_t qc::coroutine::Coroutine::coro_count = 0;
+uint64_t qc::coroutine::Coroutine::coro_id = 0;
+
+int g_coroutine_stk_size = 128 * 1024;
+
+qc::coroutine::Coroutine::Coroutine(Func cb, size_t stackSize) 
+    : m_cb(cb), m_status(Status::INIT) {
+    ++coro_count;
+    m_id = ++coro_id;
+    m_stkSize = stackSize ? stackSize : g_coroutine_stk_size;
+    m_stk = malloc(m_stkSize);
+
+    if (getcontext(&m_ctx) == -1) {
+        QC_ASSERTS(false, "getcontext error");
+    }
+    m_ctx.uc_link = main_ctx;
+    m_ctx.uc_stack.ss_sp = m_stk;
+    m_ctx.uc_stack.ss_size = m_stkSize;
+    
+    makecontext(&m_ctx, (void (*)())Coroutine::trampoline, 1, this);
+    m_status = Status::RADY;
+    LOG_INFO(ROOT_LOG()) << "coroutine id:" << m_id << " create success";
+}
+
+qc::coroutine::Coroutine::~Coroutine() {
+    if (m_status != Status::DEAD && m_status != Status::ECPT) {
+        QC_ASSERTS(false, "cannot deconstruct status error");
+    }
+    if (m_stk) {
+        free(m_stk);
+    }
+    --coro_count;
+    LOG_INFO(ROOT_LOG()) << "coroutine id:" << m_id << " destroy success";
+}
+
+void qc::coroutine::Coroutine::trampoline(Coroutine* co) {
+    setThis(co);
+    try {
+        co->m_cb();
+        co->m_status = Status::DEAD;
+    } catch (std::exception& e) {
+        co->m_status = Status::ECPT;
+        LOG_ERROR(ROOT_LOG()) << "coroutine id:" << cur_coro << " get exception:" << e.what();
+    } catch (...) {
+        LOG_ERROR(ROOT_LOG()) << "coroutine id:" << cur_coro << " get unknown exception";
+    }
+    setThis(nullptr);
+}
+
+void qc::coroutine::Coroutine::resume() {
+    if (m_status != Status::RADY && m_status != Status::SUSP) {
+        QC_ASSERTS(false, "cannot resume, status error");
+    }
+    setThis(this);
+    m_status = Status::RUNN;
+    if (swapcontext(main_ctx, &m_ctx)) {
+        QC_ASSERTS(false, "resume swapcontext error");
+    }
+}
+
+void qc::coroutine::Coroutine::yield() {
+    if (m_status != Status::RUNN) {
+        QC_ASSERTS(false, "cannot yield, status error");
+    }
+    m_status = Status::SUSP;
+    setThis(nullptr);
+    if (swapcontext(&m_ctx, main_ctx)) {
+        QC_ASSERTS(false, "resume swapcontext error");
+    }
+}
+
+void qc::coroutine::Coroutine::reset(Func cb) {
+    if (m_status == Status::RUNN) {
+        QC_ASSERTS(false, "cannot reset, status error");
+    }
+    m_cb = cb;
+    m_status = Status::INIT;
+    if (getcontext(&m_ctx)) {
+        QC_ASSERTS(false, "getcontext error");
+    }
+    m_ctx.uc_link = main_ctx;
+    m_ctx.uc_stack.ss_sp = m_stk;
+    m_ctx.uc_stack.ss_size = m_stkSize;
+
+    makecontext(&m_ctx, (void (*)())&Coroutine::trampoline, 1, this);
+    m_status = Status::RADY;
+}
+
+qc::coroutine::Status qc::coroutine::Coroutine::status() const{
+    return m_status;
+}
+
+uint64_t qc::coroutine::Coroutine::getId() {
+    return m_id;
+}
+
+void qc::coroutine::Coroutine::setThis(Coroutine* co) {
+    cur_coro = co;
+}
+
+qc::coroutine::Coroutine* qc::coroutine::Coroutine::getThis() {
+    return cur_coro;
+}
+
+uint64_t qc::coroutine::Coroutine::getCount() {
+    return coro_count;
+}
+
+void qc::coroutine::Coroutine::setMain(ucontext_t *ctx) {
+    main_ctx = ctx;
+}

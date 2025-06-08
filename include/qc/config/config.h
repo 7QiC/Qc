@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <functional>
 #include <yaml-cpp/yaml.h>
-#include "qc/log/log_module.h"
+#include "qc/macro.h"
 #include "qc/thread/mutex.h"
 
 namespace YAML {

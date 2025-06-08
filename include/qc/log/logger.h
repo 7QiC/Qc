@@ -2,9 +2,9 @@
 #define QC_LOGGER_H
 
 #include <list>
-#include <source_location>
+#include "qc/log/event.h"
+#include "qc/log/layout.h"
 #include "qc/log/appender.h"
-#include "qc/utils.h"
 #include "qc/thread/mutex.h"
 
 namespace qc {
@@ -23,11 +23,11 @@ class Logger{
      * @brief 格式化输出日志
      * @param fmt 日志内容
      */
-    void debug(const char* fmt, std::source_location loc = std::source_location::current());
-    void info(const char* fmt, std::source_location loc = std::source_location::current());
-    void warn(const char* fmt, std::source_location loc = std::source_location::current());
-    void error(const char* fmt, std::source_location loc = std::source_location::current());
-    void fatal(const char* fmt, std::source_location loc = std::source_location::current());
+    // void debug(const char* fmt, std::source_location loc = std::source_location::current());
+    // void info(const char* fmt, std::source_location loc = std::source_location::current());
+    // void warn(const char* fmt, std::source_location loc = std::source_location::current());
+    // void error(const char* fmt, std::source_location loc = std::source_location::current());
+    // void fatal(const char* fmt, std::source_location loc = std::source_location::current());
 
     void addAppender(Appender::ptr appender);
     void delAppender(Appender::ptr appender);

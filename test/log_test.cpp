@@ -1,16 +1,19 @@
 #include "qc/log/log_module.h"
 #include "qc/utils.h"
+#include "qc/macro.h"
+#include <iostream>
 
 using namespace qc::log;
 
 int main() {
+    std::cout << "asdasd" << std::endl;
     int x = 10;
     char c = 'A';
     // 创建日志器
-    Logger::ptr logger = LoggerMgr::Instance()->getLogger("test_logger");
-    logger->setLayout(LoggerMgr::Instance()->getLayout());
-    logger->setLevel(LoggerMgr::Instance()->getLevel());
-    logger->setPattern(LoggerMgr::Instance()->getPattern());
+    Logger::ptr logger = qc::log::Manager::GetInstance()->getLogger("test_logger");
+    logger->setLayout(qc::log::Manager::GetInstance()->getLayout());
+    logger->setLevel(qc::log::Manager::GetInstance()->getLevel());
+    logger->setPattern(qc::log::Manager::GetInstance()->getPattern());
     logger->setValid(true);
 
     // 创建控制台输出器
@@ -43,7 +46,7 @@ int main() {
     LOG_FMT_ERROR(logger, "This is a formatted error log message with value: %d %c", x, c);
     LOG_FMT_FATAL(logger, "This is a formatted fatal log message with value: %d %c", x, c);
 
-    auto l = LoggerMgr::Instance()->getLogger("XX");
+    auto l = qc::log::Manager::GetInstance()->getLogger("XX");
     LOG_DEBUG(l) << "This is a debug log message from logger XX.";
     LOG_DEBUG(ROOT_LOG()) << "This is a debug log message from root logger.";
 

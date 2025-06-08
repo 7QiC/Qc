@@ -1,10 +1,10 @@
 #ifndef QC_MANAGER_H
 #define QC_MANAGER_H
 
-#include <map>
+#include <unordered_map>
+#include "qc/log/event.h"
+#include "qc/log/layout.h"
 #include "qc/log/logger.h"
-#include "qc/log/warp.h"
-#include "qc/utils.h"
 #include "qc/thread/mutex.h"
 
 namespace qc {
@@ -13,6 +13,11 @@ namespace log {
 class Manager {
   public:
     using RWMutex = qc::thread::RWMutex;
+
+    static Manager* GetInstance() {
+        static Manager mgr;
+        return &mgr;
+    }
 
     Manager();
 
@@ -34,8 +39,6 @@ class Manager {
     Level m_level;
     Layout::ptr m_layout;
 };
-
-using LoggerMgr = qc::Singleton<Manager>;
 
 }
 }

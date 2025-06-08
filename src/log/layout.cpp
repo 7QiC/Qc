@@ -1,13 +1,16 @@
 #include "qc/log/layout.h"
+#include <iostream>
+#include <sstream>
+#include <unordered_map>
+#include <ctime>
+#include <functional>
 
-using namespace qc::log;
-
-Layout::Layout(const std::string& pattern) 
+qc::log::Layout::Layout(const std::string& pattern) 
                 : m_pattern(pattern) {
     init();
 }
 
-std::string Layout::layout(Event::ptr event) {
+std::string qc::log::Layout::layout(Event::ptr event) {
     std::stringstream ss;
     for (auto& it : m_items) {
         it->format(ss, event);
@@ -15,39 +18,39 @@ std::string Layout::layout(Event::ptr event) {
     return ss.str();
 }
 
-class TextFormatItem : public Layout::FormatItem {
+class TextFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit TextFormatItem(const std::string& str) 
                             : m_str(str) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << m_str;
     }
   private:
     std::string m_str;
 };
 
-class NameFormatItem : public Layout::FormatItem {
+class NameFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit NameFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << event->getName();
     }
 };
 
-class LevelFormatItem : public Layout::FormatItem {
+class LevelFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit LevelFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << levelToString(event->getLevel());
     }
   private:
-    static std::string levelToString(Level level) {
+    static std::string levelToString(qc::log::Level level) {
         switch (level) {
         #define XX(lvl) \
-            case Level::lvl: return #lvl;
+            case qc::log::Level::lvl: return #lvl;
             XX(DEBUG)
             XX(INFO)
             XX(WARN)
@@ -61,25 +64,25 @@ class LevelFormatItem : public Layout::FormatItem {
     }
 };
 
-class FileNameFormatItem : public Layout::FormatItem {
+class FileNameFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit FileNameFormatItem(const std::string&) {}
   
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << event->getFileName();
     }
 };
 
-class LineFormatItem : public Layout::FormatItem {
+class LineFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit LineFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << event->getLine();
     }
 };
 
-class DateTimeFormatItem : public Layout::FormatItem {
+class DateTimeFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit DateTimeFormatItem(const std::string& time) 
                                 : m_time(time) {
@@ -88,7 +91,7 @@ class DateTimeFormatItem : public Layout::FormatItem {
         }
     }
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         struct tm tm_time;
         time_t time = event->getTime();
         localtime_r(&time, &tm_time);
@@ -100,65 +103,74 @@ class DateTimeFormatItem : public Layout::FormatItem {
     std::string m_time;
 };
 
-class ElapseFormatItem : public Layout::FormatItem {
+class ElapseFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit ElapseFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << event->getElapse();
     }
 };
 
-class ThreadIdFormatItem : public Layout::FormatItem {
+class ThreadIdFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit ThreadIdFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << event->getThreadId();
     }
 };
 
-class FiberIdFormatItem : public Layout::FormatItem {
+class ThreadNameFormatItem : public qc::log::Layout::FormatItem {
   public:
-    explicit FiberIdFormatItem(const std::string&) {}
+    explicit ThreadNameFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
-        os << event->getFiberId();
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
+        os << event->getThreadName();
     }
 };
 
-class ContentFormatItem : public Layout::FormatItem {
+class CoroutineIdFormatItem : public qc::log::Layout::FormatItem {
+  public:
+    explicit CoroutineIdFormatItem(const std::string&) {}
+
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
+        os << event->getCoroutineId();
+    }
+};
+
+class ContentFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit ContentFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << event->getContent();
     }
 };
 
-class NewLineFormatItem : public Layout::FormatItem {
+class NewLineFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit NewLineFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << std::endl;
     }
 };
 
-class PercentFormatItem : public Layout::FormatItem {
+class PercentFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit PercentFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << '%';
     }
 };
 
-class TabFormatItem : public Layout::FormatItem {
+class TabFormatItem : public qc::log::Layout::FormatItem {
   public:
     explicit TabFormatItem(const std::string&) {}
 
-    void format(std::ostream& os, Event::ptr event) override {
+    void format(std::ostream& os, qc::log::Event::ptr event) override {
         os << '\t';
     }
 };
@@ -184,7 +196,7 @@ class TabFormatItem : public Layout::FormatItem {
 //"T"    ""                     1 		#制表（4空格）
 //"m"    ""                     1		#消息
 //"n"    ""                     1 		#换行  
-void Layout::init() {
+void qc::log::Layout::init() {
     enum STATUS {
         SCAN,
         CREATE
@@ -201,12 +213,13 @@ void Layout::init() {
         XX('l', Line),
         XX('d', DateTime),
         XX('r', Elapse),
-        XX('t', ThreadId),
-        XX('F', FiberId),
+        XX('T', ThreadId),
+        XX('N', ThreadName),
+        XX('C', CoroutineId),
         XX('m', Content),
         XX('n', NewLine),
         XX('%', Percent),
-        XX('T', Tab)
+        XX('t', Tab)
     #undef XX
     };
 

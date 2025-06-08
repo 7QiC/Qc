@@ -1,13 +1,11 @@
 #include "qc/config/config.h"
 
-namespace qc {
-
-ConfigVarBase::ptr Config::LookupBase(const std::string& name) {
+qc::ConfigVarBase::ptr qc::Config::LookupBase(const std::string& name) {
     auto it = getVars().find(name);
     return it == getVars().end() ? nullptr : it->second;
 }
 
-void Config::TraversalYaml(const std::string& prefix, const YAML::Node& node, std::list<std::pair<std::string, const YAML::Node>>& nodes) {
+void qc::Config::TraversalYaml(const std::string& prefix, const YAML::Node& node, std::list<std::pair<std::string, const YAML::Node>>& nodes) {
     if (prefix.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._") != std::string::npos) {
         LOG_ERROR(ROOT_LOG()) << "TraversalYaml prefix contains invalid characters: " << prefix;
         return;
@@ -21,7 +19,7 @@ void Config::TraversalYaml(const std::string& prefix, const YAML::Node& node, st
     }
 }
 
-const YAML::Node Config::GetConfig() {
+const YAML::Node qc::Config::GetConfig() {
     RWMutex::RLock lock(Config::getMutex());
     YAML::Node root;
     Visit([&root](ConfigVarBase::ptr var) {
@@ -30,7 +28,7 @@ const YAML::Node Config::GetConfig() {
     return root;
 }
 
-void Config::LoadFromYaml(const YAML::Node& root) {
+void qc::Config::LoadFromYaml(const YAML::Node& root) {
     RWMutex::WLock lock(Config::getMutex());
     std::list<std::pair<std::string, const YAML::Node>> nodes;
     TraversalYaml("", root, nodes);
@@ -51,12 +49,10 @@ void Config::LoadFromYaml(const YAML::Node& root) {
     }
 }
 
-void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb) {
+void qc::Config::Visit(std::function<void(qc::ConfigVarBase::ptr)> cb) {
     RWMutex::RLock lock(Config::getMutex());
     ConfigVarMap config = getVars();
     for (const auto& it : config) {
         cb(it.second);
     }
-}
-
 }

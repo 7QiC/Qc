@@ -2,9 +2,10 @@
 #define QC_APPENDER_H
 
 #include <memory>
-#include <iostream>
 #include <fstream>
+#include "qc/log/event.h"
 #include "qc/log/layout.h"
+#include "qc/thread/mutex.h"
 
 namespace qc {
 namespace log {
@@ -14,13 +15,13 @@ namespace log {
  */
 class Appender {
   public:
-    using ptr = std::unique_ptr<Appender>;
+    using ptr = std::unique_ptr<Appender>;  
     using Mutex = qc::thread::SpinLock;
     
     explicit Appender(Level level);
     virtual ~Appender() = default;
     
-    virtual void log(Event::ptr event) = 0;
+    virtual void log(qc::log::Event::ptr event) = 0;
     
     void setLevel(Level level);
     void setLayout(Layout::ptr layout);

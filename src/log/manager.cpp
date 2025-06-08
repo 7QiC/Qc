@@ -1,15 +1,14 @@
 #include "qc/log/manager.h"
+#include "qc/thread/mutex.h"
 
-using namespace qc::log;
-
-Manager::Manager() {
+qc::log::Manager::Manager() {
     init();
 }
 
-void Manager::init() {
-    m_pattern = "%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n";
-    m_layout = std::make_shared<Layout>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n");
-    m_layouts["%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"] = m_layout;
+void qc::log::Manager::init() {
+    m_pattern = "%d{%Y-%m-%d %H:%M:%S}%t%T%t%N%t%C%t[%p]%t[%c]%t%f:%l%t%m%n";
+    m_layout = std::make_shared<Layout>("%d{%Y-%m-%d %H:%M:%S}%t%T%t%N%t%C%t[%p]%t[%c]%t%f:%l%t%m%n");
+    m_layouts["%d{%Y-%m-%d %H:%M:%S}%t%T%t%N%t%C%t[%p]%t[%c]%t%f:%l%t%m%n"] = m_layout;
     m_level = Level::UNKNOW;
     Appender::ptr appender = std::make_unique<ConsoleAppender>(Level::UNKNOW);
     appender->setLayout(m_layout);
@@ -19,7 +18,7 @@ void Manager::init() {
     m_loggers["root"] = m_root;
 }
 
-Logger::ptr Manager::getLogger(const std::string& name) {
+qc::log::Logger::ptr qc::log::Manager::getLogger(const std::string& name) {
     RWMutex::WLock lock(m_mutex);
     auto it = m_loggers.find(name);
     if (it != m_loggers.end()) {
@@ -31,7 +30,7 @@ Logger::ptr Manager::getLogger(const std::string& name) {
     return logger;
 }
 
-Layout::ptr Manager::getLayout(const std::string& pattern) {
+qc::log::Layout::ptr qc::log::Manager::getLayout(const std::string& pattern) {
     RWMutex::WLock lock(m_mutex);
     auto it = m_layouts.find(pattern);
     if (it != m_layouts.end()) {

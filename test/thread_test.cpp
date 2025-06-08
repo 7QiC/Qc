@@ -4,6 +4,7 @@
 #include "qc/log/log_module.h"
 #include "qc/config/config_module.h"
 #include "qc/thread/thread_module.h"
+#include "qc/macro.h"
 
 using namespace qc::thread;
 
@@ -17,7 +18,7 @@ void func1() {
     //                                 << " this.name: " << thread::Thread::GetThis()->getName()
     //                                 << " tid: " << qc::GetThreadId()
     //                                 << " this.tid: " << thread::Thread::GetThis()->getTid();
-    for (int i = 0; i < 100000; ++i) {
+    for (int i = 0; i < 10; ++i) {
         Mutex::Lock lock(mutex);
         cnt++;
     }

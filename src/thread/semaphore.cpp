@@ -1,8 +1,7 @@
 #include "qc/thread/semaphore.h"
+#include <stdexcept>
 
-using namespace qc::thread;
-
-Semaphore::Semaphore(uint32_t count) {
+qc::thread::Semaphore::Semaphore(uint32_t count) {
     if (count < 0) {
         throw std::invalid_argument("semaphore count must > 0");
     }
@@ -11,17 +10,17 @@ Semaphore::Semaphore(uint32_t count) {
     }
 }
 
-Semaphore::~Semaphore() {
+qc::thread::Semaphore::~Semaphore() {
     sem_destroy(&m_sem);
 }
 
-void Semaphore::wait() {
+void qc::thread::Semaphore::wait() {
     if (sem_wait(&m_sem)) {
         throw std::logic_error("sem_wait error");
     }
 }
 
-void Semaphore::notify() {
+void qc::thread::Semaphore::notify() {
     if (sem_post(&m_sem)) {
         throw std::logic_error("sem_post error");
     }

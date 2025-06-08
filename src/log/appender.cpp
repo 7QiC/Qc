@@ -1,26 +1,26 @@
 #include "qc/log/appender.h"
+#include <iostream>
+#include "qc/thread/mutex.h"
 
-using namespace qc::log;
-
-Appender::Appender(Level level) 
+qc::log::Appender::Appender(Level level) 
                     : m_level(level) {}
 
-void Appender::setLevel(Level level) {
+void qc::log::Appender::setLevel(Level level) {
     m_level = level;
 }
 
-void Appender::setLayout(Layout::ptr layout) {
+void qc::log::Appender::setLayout(Layout::ptr layout) {
     m_layout = layout;
 }
 
-Layout::ptr Appender::getLayout() const {
+qc::log::Layout::ptr qc::log::Appender::getLayout() const {
     return m_layout;
 }
 
-ConsoleAppender::ConsoleAppender(Level level) 
+qc::log::ConsoleAppender::ConsoleAppender(Level level) 
                     : Appender(level) {}
 
-void ConsoleAppender::log(Event::ptr event) {
+void qc::log::ConsoleAppender::log(Event::ptr event) {
     if (event->getLevel() >= m_level) {
         std::string str = m_layout->layout(event);
         Mutex::Lock lock(m_mutex);
@@ -28,14 +28,14 @@ void ConsoleAppender::log(Event::ptr event) {
     }
 }
 
-FileAppender::FileAppender(const std::string& filename, Level level) 
+qc::log::FileAppender::FileAppender(const std::string& filename, Level level) 
                             : m_filename(filename), Appender(level) {
     if (!reopen()) {
         std::cerr << "FileAppender::reopen() error: " << filename << std::endl;
     }
 }
 
-bool FileAppender::reopen() {
+bool qc::log::FileAppender::reopen() {
     if (m_filestream) {
         m_filestream.close();
     }
@@ -43,7 +43,7 @@ bool FileAppender::reopen() {
     return !!m_filestream;
 }
 
-void FileAppender::log(Event::ptr event) {
+void qc::log::FileAppender::log(Event::ptr event) {
     if (event->getLevel() >= m_level) {
         std::string str = m_layout->layout(event);
         Mutex::Lock lock(m_mutex);

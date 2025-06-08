@@ -1,9 +1,8 @@
 #ifndef QC_THREAD_H
 #define QC_THREAD_H
 
-#include <thread>
-#include <memory>
 #include <functional>
+#include <memory>
 #include "qc/thread/semaphore.h"
 #include "qc/utils.h"
 
@@ -21,8 +20,9 @@ enum class State {
 class Thread : private qc::NonCopy {
   public:
     using ptr = std::shared_ptr<Thread>;
+    using Func = std::function<void()>;
 
-    Thread(std::function<void()> cb, const std::string& name);
+    Thread(Func cb, const std::string& name);
 
     ~Thread();
 
@@ -36,11 +36,11 @@ class Thread : private qc::NonCopy {
 
     static Thread* GetThis();
     static void SetName(const std::string& name);
-    static std::string GetName();
+    static const std::string& GetName();
   private:
     static void* run(void* arg);
 
-    std::function<void()> m_cb;
+    Func m_cb;
     std::string m_name;
     pid_t m_tid;
     pthread_t m_thread;

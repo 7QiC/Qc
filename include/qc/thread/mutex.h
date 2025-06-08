@@ -1,7 +1,7 @@
 #ifndef QC_MUTEX_H
 #define QC_MUTEX_H
 
-#include <thread>
+#include <pthread.h>
 #include "qc/utils.h"
 #include "qc/thread/scopedlock.h"
 

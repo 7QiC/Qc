@@ -1,10 +1,9 @@
 #ifndef QC_WARP_H
 #define QC_WARP_H
 
-#include <cstdarg>
+#include <sstream>
 #include "qc/log/event.h"
 #include "qc/log/logger.h"
-#include "qc/log/manager.h"
 
 namespace qc {
 namespace log {
@@ -15,12 +14,7 @@ class Warp {
 
     ~Warp();
 
-    void format(const char* fmt, ...) {
-        va_list al;
-        va_start(al, fmt);
-        m_event->format(fmt, al);
-        va_end(al);
-    }
+    void format(const char* fmt, ...);
 
     template<typename T>
     std::stringstream& operator<<(T value) {

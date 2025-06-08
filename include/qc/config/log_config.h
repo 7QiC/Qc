@@ -1,16 +1,16 @@
 #ifndef QC_LOG_CONFIG_H
 #define QC_LOG_CONFIG_H
 
-#include <filesystem>
-#include <fstream>
+#include <list>
+#include <yaml-cpp/yaml.h>
+#include "qc/log/event.h"
 #include "qc/config/config.h"
-#include "qc/log/log_module.h"
 
 namespace qc {
 
 struct AppenderConfig {
     std::string type; // 0: ConsoleAppender, 1: FileAppender, etc.
-    log::Level level = log::Level::UNKNOW;
+    log::Level level;
     std::string pattern;
     std::string filename; // For FileAppender
 
@@ -18,15 +18,15 @@ struct AppenderConfig {
 };
 
 struct LogConfig {
-    log::Level level = log::Level::UNKNOW;
+    log::Level level;
     std::string pattern;
     std::list<AppenderConfig> appenders;
 
     auto operator<=>(const LogConfig&) const = default;
 };
 
-struct LogIniter {
-    LogIniter();
+struct Initer {
+    Initer();
 };
 
 }
