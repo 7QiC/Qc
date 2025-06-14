@@ -4,6 +4,7 @@
 #include <ucontext.h>
 #include <functional>
 #include <memory>
+#include <atomic>
 
 namespace qc {
 namespace coroutine {
@@ -34,7 +35,7 @@ class Coroutine {
     static uint64_t getCount();
     static void setMain(ucontext_t* ctx);
   private:
-    static void trampoline(Coroutine* co);
+    static void trampoline();
 
     uint64_t m_id;
     Status m_status;
@@ -42,10 +43,10 @@ class Coroutine {
     void* m_stk;
     size_t m_stkSize;
     ucontext_t m_ctx;
-    static thread_local ucontext_t* main_ctx;
+    static std::atomic<uint64_t> coro_id;
+    static thread_local ucontext_t* t_main_ctx;
     static thread_local uint64_t coro_count;
-    static uint64_t coro_id;
-    static thread_local Coroutine* cur_coro;
+    static thread_local Coroutine* t_cur_coro;
 };
 
 }

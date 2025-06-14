@@ -1,5 +1,5 @@
-#include "qc/coroutine/coroutine.h"
-#include "qc/thread/thread.h"
+#include "qc/coroutine/coroutine_module.h"
+#include "qc/thread/thread_module.h"
 #include "qc/macro.h"
 
 void run() {

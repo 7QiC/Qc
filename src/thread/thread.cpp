@@ -1,12 +1,23 @@
 #include "qc/thread/thread.h"
 #include <pthread.h>
 #include <memory>
+#include "qc/macro.h"
 
 thread_local qc::thread::Thread* qc::thread::Thread::t_thread = nullptr;
 thread_local std::string qc::thread::Thread::t_threadName = "NONE";
+thread_local size_t qc::thread::Thread::t_threadIdx = -1;
+// thread_local std::vector<qc::coroutine::Coroutine::ptr> qc::thread::Thread::t_coroutine_pool;
 
 qc::thread::Thread* qc::thread::Thread::GetThis() {
     return t_thread;
+}
+
+void qc::thread::Thread::SetThreadIdx(size_t idx) {
+    t_threadIdx = idx;
+}
+
+size_t qc::thread::Thread::getThreadIdx() {
+    return t_threadIdx;
 }
 
 const std::string& qc::thread::Thread::GetName() {
@@ -22,6 +33,10 @@ void qc::thread::Thread::SetName(const std::string& name) {
     }
     t_threadName = name;
 }
+
+// std::vector<qc::coroutine::Coroutine::ptr>& qc::thread::Thread::getCoroPool() {
+//     return t_coroutine_pool;
+// }
 
 qc::thread::Thread::Thread(Func cb, const std::string& name) 
                 : m_cb(cb), m_name(name), m_state(State::INIT) {
@@ -53,12 +68,14 @@ qc::thread::Thread::~Thread() {
             break;
         }
     }
+    LOG_INFO(ROOT_LOG()) << "thread exit, thread id = " << m_tid;
 }
 
 void* qc::thread::Thread::run(void* arg) {
     t_thread = static_cast<Thread*>(arg);
     t_threadName = t_thread->m_name;
     t_thread->m_tid = qc::GetThreadId();
+    t_threadIdx = -1;
     pthread_setname_np(pthread_self(), t_threadName.substr(0, 15).c_str());
 
     Func cb;

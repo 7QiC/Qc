@@ -5,5 +5,6 @@
 #include "qc/thread/scopedlock.h"
 #include "qc/thread/mutex.h"
 #include "qc/thread/semaphore.h"
+#include "qc/thread/lockfreequeue.h"
 
 #endif

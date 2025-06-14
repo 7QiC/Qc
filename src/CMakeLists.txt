@@ -7,3 +7,5 @@ add_subdirectory(config)
 add_subdirectory(thread)
 
 add_subdirectory(coroutine)
+
+add_subdirectory(scheduler)

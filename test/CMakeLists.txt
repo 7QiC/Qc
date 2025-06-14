@@ -18,8 +18,12 @@ project(QcTests)
 #     macro_test.cpp  # 指定宏测试文件路径
 # )
 
-add_executable(coroutine_test
-    coroutine_test.cpp
+# add_executable(coroutine_test
+#     coroutine_test.cpp
+# )
+
+add_executable(scheduler_test
+    scheduler_test.cpp
 )
 
 # 链接主库和依赖
@@ -48,12 +52,22 @@ add_executable(coroutine_test
 #     qc_log
 # )
 
-target_link_libraries(coroutine_test
+# target_link_libraries(coroutine_test
+#     qc_utils
+#     qc_log
+#     qc_coroutine
+#     qc_config
+#     qc_thread
+#     qc_scheduler
+# )
+
+target_link_libraries(scheduler_test
     qc_utils
     qc_log
     qc_coroutine
     qc_config
     qc_thread
+    qc_scheduler
 )
 
 # 添加测试（可选）

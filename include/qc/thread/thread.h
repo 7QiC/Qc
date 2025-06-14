@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include "qc/thread/semaphore.h"
+#include "qc/coroutine/coroutine.h"
 #include "qc/utils.h"
 
 namespace qc {
@@ -35,6 +36,8 @@ class Thread : private qc::NonCopy {
     State getState() const { return m_state; }
 
     static Thread* GetThis();
+    static void SetThreadIdx(size_t idx);
+    static size_t getThreadIdx();
     static void SetName(const std::string& name);
     static const std::string& GetName();
   private:
@@ -48,6 +51,7 @@ class Thread : private qc::NonCopy {
     Semaphore m_sem;
     static thread_local Thread* t_thread;
     static thread_local std::string t_threadName;
+    static thread_local size_t t_threadIdx;
 };
 
 }

@@ -15,12 +15,14 @@ qc::thread::Semaphore::~Semaphore() {
 }
 
 void qc::thread::Semaphore::wait() {
+    ++m_count;
     if (sem_wait(&m_sem)) {
         throw std::logic_error("sem_wait error");
     }
 }
 
 void qc::thread::Semaphore::notify() {
+    --m_count;
     if (sem_post(&m_sem)) {
         throw std::logic_error("sem_post error");
     }

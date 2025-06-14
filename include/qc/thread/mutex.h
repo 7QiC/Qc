@@ -37,6 +37,10 @@ class Mutex : qc::NonTransfer {
         pthread_mutex_unlock(&m_mutex);
     }
   private:
+    friend class ConditionVariable;
+    pthread_mutex_t* getPhreadMutex() {
+      return &m_mutex;
+    }
     pthread_mutex_t m_mutex;
 };
 

@@ -1,7 +1,7 @@
 #include "qc/log/manager.h"
 #include "qc/thread/mutex.h"
 
-qc::log::Manager::Manager() {
+qc::log::Manager::Manager() : m_root(nullptr) {
     init();
 }
 

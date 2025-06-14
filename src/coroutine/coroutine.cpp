@@ -1,10 +1,11 @@
 #include "qc/coroutine/coroutine.h"
+#include <memory.h>
 #include "qc/macro.h"
 
-thread_local ucontext_t* qc::coroutine::Coroutine::main_ctx = nullptr;
-thread_local qc::coroutine::Coroutine* qc::coroutine::Coroutine::cur_coro = nullptr;
+thread_local ucontext_t* qc::coroutine::Coroutine::t_main_ctx = nullptr;
+thread_local qc::coroutine::Coroutine* qc::coroutine::Coroutine::t_cur_coro = nullptr;
 thread_local uint64_t qc::coroutine::Coroutine::coro_count = 0;
-uint64_t qc::coroutine::Coroutine::coro_id = 0;
+std::atomic<uint64_t> qc::coroutine::Coroutine::coro_id = 0;
 
 int g_coroutine_stk_size = 128 * 1024;
 
@@ -15,14 +16,14 @@ qc::coroutine::Coroutine::Coroutine(Func cb, size_t stackSize)
     m_stkSize = stackSize ? stackSize : g_coroutine_stk_size;
     m_stk = malloc(m_stkSize);
 
+    memset(&m_ctx, 0, sizeof(ucontext_t));
     if (getcontext(&m_ctx) == -1) {
         QC_ASSERTS(false, "getcontext error");
     }
-    m_ctx.uc_link = main_ctx;
+    m_ctx.uc_link = nullptr;
     m_ctx.uc_stack.ss_sp = m_stk;
     m_ctx.uc_stack.ss_size = m_stkSize;
-    
-    makecontext(&m_ctx, (void (*)())Coroutine::trampoline, 1, this);
+    makecontext(&m_ctx, (void (*)())&Coroutine::trampoline, 0);
     m_status = Status::RADY;
     LOG_INFO(ROOT_LOG()) << "coroutine id:" << m_id << " create success";
 }
@@ -38,27 +39,30 @@ qc::coroutine::Coroutine::~Coroutine() {
     LOG_INFO(ROOT_LOG()) << "coroutine id:" << m_id << " destroy success";
 }
 
-void qc::coroutine::Coroutine::trampoline(Coroutine* co) {
-    setThis(co);
+void qc::coroutine::Coroutine::trampoline() {
     try {
-        co->m_cb();
-        co->m_status = Status::DEAD;
+        t_cur_coro->m_cb();
+        t_cur_coro->m_status = Status::DEAD;
     } catch (std::exception& e) {
-        co->m_status = Status::ECPT;
-        LOG_ERROR(ROOT_LOG()) << "coroutine id:" << cur_coro << " get exception:" << e.what();
+        t_cur_coro->m_status = Status::ECPT;
+        LOG_ERROR(ROOT_LOG()) << "coroutine id:" << t_cur_coro->getId() << " get exception:" << e.what();
     } catch (...) {
-        LOG_ERROR(ROOT_LOG()) << "coroutine id:" << cur_coro << " get unknown exception";
+        LOG_ERROR(ROOT_LOG()) << "coroutine id:" << t_cur_coro->getId() << " get unknown exception";
     }
+    qc::coroutine::Coroutine* t_co = t_cur_coro;
     setThis(nullptr);
+    if (swapcontext(&t_co->m_ctx, t_main_ctx)) {
+        QC_ASSERTS(false, "back swapcontext error");
+    }
 }
 
 void qc::coroutine::Coroutine::resume() {
     if (m_status != Status::RADY && m_status != Status::SUSP) {
         QC_ASSERTS(false, "cannot resume, status error");
     }
-    setThis(this);
     m_status = Status::RUNN;
-    if (swapcontext(main_ctx, &m_ctx)) {
+    setThis(this);
+    if (swapcontext(t_main_ctx, &m_ctx)) {
         QC_ASSERTS(false, "resume swapcontext error");
     }
 }
@@ -69,7 +73,7 @@ void qc::coroutine::Coroutine::yield() {
     }
     m_status = Status::SUSP;
     setThis(nullptr);
-    if (swapcontext(&m_ctx, main_ctx)) {
+    if (swapcontext(&m_ctx, t_main_ctx)) {
         QC_ASSERTS(false, "resume swapcontext error");
     }
 }
@@ -80,18 +84,18 @@ void qc::coroutine::Coroutine::reset(Func cb) {
     }
     m_cb = cb;
     m_status = Status::INIT;
+    memset(&m_ctx, 0, sizeof(ucontext_t));
     if (getcontext(&m_ctx)) {
         QC_ASSERTS(false, "getcontext error");
     }
-    m_ctx.uc_link = main_ctx;
     m_ctx.uc_stack.ss_sp = m_stk;
     m_ctx.uc_stack.ss_size = m_stkSize;
-
-    makecontext(&m_ctx, (void (*)())&Coroutine::trampoline, 1, this);
+    makecontext(&m_ctx, (void (*)())&Coroutine::trampoline, 0);
     m_status = Status::RADY;
+    LOG_INFO(ROOT_LOG()) << "coroutine id:" << m_id << " reset success";
 }
 
-qc::coroutine::Status qc::coroutine::Coroutine::status() const{
+qc::coroutine::Status qc::coroutine::Coroutine::status() const {
     return m_status;
 }
 
@@ -100,11 +104,11 @@ uint64_t qc::coroutine::Coroutine::getId() {
 }
 
 void qc::coroutine::Coroutine::setThis(Coroutine* co) {
-    cur_coro = co;
+    t_cur_coro = co;
 }
 
 qc::coroutine::Coroutine* qc::coroutine::Coroutine::getThis() {
-    return cur_coro;
+    return t_cur_coro;
 }
 
 uint64_t qc::coroutine::Coroutine::getCount() {
@@ -112,5 +116,5 @@ uint64_t qc::coroutine::Coroutine::getCount() {
 }
 
 void qc::coroutine::Coroutine::setMain(ucontext_t *ctx) {
-    main_ctx = ctx;
+    t_main_ctx = ctx;
 }
